@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'tmdb' => [
+        'api_key' => env('TMDB_API_KEY'),
+        'image_api_url' => 'https://image.tmdb.org/t/p',
+    ]
+
 ];
