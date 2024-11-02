@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\User\Entity;
 
+use App\Models\Movie\Entity\Movie;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -46,6 +47,14 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function movies()
+    {
+        return $this->belongsToMany(Movie::class, 'user_movie_pivot', 'user_id', 'movie_id')
+            ->withPivot('seen_at')
+            ->using(UserMovie::class)
+            ->withTimestamps();
     }
 
     public function canAccessPanel(Panel $panel): bool

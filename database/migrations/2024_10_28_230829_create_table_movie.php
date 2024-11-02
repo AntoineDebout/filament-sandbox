@@ -20,6 +20,7 @@ return new class extends Migration
             $table->date('release_date')->nullable();
             $table->decimal('vote_average', 3, 1)->nullable();
             $table->integer('vote_count')->nullable();
+            $table->integer('duration')->nullable();
             $table->timestamps();
         });
     }
