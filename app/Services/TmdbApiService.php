@@ -57,7 +57,48 @@ class TmdbApiService
         return $response->successful() ? $response->json() : null;
     }
 
-    //$service = new TmdbApiService();
-    //dd($service->searchMovies('Avatar'));
-    //dd($service->getMovieDetails(19995));
+    public function getMovieImage($id)
+    {
+        $movie = $this->getMovieById($id);
+        return $movie ? "https://image.tmdb.org/t/p/w92" . $movie['poster_path'] : null;
+    }
+
+    public function getMovieById(int $id): ?array
+    {
+        $response = Http::get("https://api.themoviedb.org/3/movie/{$id}", [
+            'api_key' => $this->apiKey,
+            'language' => $this->language,
+        ]);
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        return null;
+    }
+
+    public function getPopularMovies(){
+        $response = Http::get("https://api.themoviedb.org/3/discover/movie", [
+            'api_key' => $this->apiKey,
+            'language' => $this->language,
+            'sort_by' => 'popularity'
+        ]);
+
+        if ($response->successful()) {
+            return $response->json()['results'];
+        }
+
+        return null;
+    }
+
+    public function fetchMovieGenres() {
+        $response = Http::get("https://api.themoviedb.org/3/genre/movie/list", [
+            'api_key' => $this->apiKey,
+            'language' => $this->language,
+        ]);
+
+        if ($response->successful()) {
+            return $response->json()['genres'];
+        }
+    }
 }

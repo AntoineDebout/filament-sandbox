@@ -2,19 +2,22 @@
 
 namespace App\Filament\Resources;
 
-use App\Enum\TmdbImageSizeEnum;
 use App\Filament\Resources\MovieResource\Pages;
-use App\Models\Movie;
-use App\Services\TmdbImageService;
+use App\Models\Movie\Entity\Movie;
+use App\Services\TmdbApiService;
+use Carbon\Carbon;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\QueryBuilder;
 use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class MovieResource extends Resource
@@ -27,7 +30,18 @@ class MovieResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Select::make('id')
+                    ->label('Rechercher un film')
+                    ->searchable()
+                    ->getSearchResultsUsing(function (string $query) {
+                        $tmdbService = new TmdbApiService();
+                        $movies = $tmdbService->searchMovies($query);
+
+                        return collect($movies)->mapWithKeys(function ($movie) {
+                            return [$movie['id'] => $movie['title'] . ' (' . Carbon::parse($movie['release_date'])->format('Y'). ')'];
+                        })->toArray();
+                    })
+                    ->required()
             ]);
     }
 
@@ -38,7 +52,7 @@ class MovieResource extends Resource
             ->columns([
                 ImageColumn::make('poster_path')
                     ->label('Poster')
-                    ->size('2xl'),
+                    ->width('lg'),
                 TextColumn::make('title')
                     ->label('Titre')
                     ->description(function (Movie $movie){
@@ -49,7 +63,16 @@ class MovieResource extends Resource
                 TextColumn::make('release_date')
                     ->label('Date de sortie')
                     ->date('Y')
-                    ->sortable()
+                    ->sortable(),
+                IconColumn::make('users_exists')
+                    ->exists([
+                        'users' => fn (Builder $query) => $query->where('user_id', auth()->user()->id),
+                    ])->icon(fn (?int $state): string => match ($state) {
+                        1 => 'heroicon-o-eye',
+                        0 => 'heroicon-o-eye-slash',
+                    })
+                    ->label('Vu ?')
+                    ->sortable(),
             ])
             ->filters([
                 QueryBuilder::make()
